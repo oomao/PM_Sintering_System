@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Root-level duplicate doc (already in docs/)
+/應用物聯網技術監控優化粉末冶金燒結過程之整合系統.docx
+
+# Environment
+.env
+
+# Logs
+*.log
+
+# Dependencies
+vendor/
+node_modules/

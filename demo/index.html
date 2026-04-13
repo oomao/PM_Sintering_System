@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>粉末冶金燒結製程 IoT 監控系統 - Live Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-base.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a1a2e;
+      --secondary: #16213e;
+      --accent: #0f3460;
+      --highlight: #e94560;
+      --card-bg: rgba(255,255,255,0.95);
+      --text-primary: #1a1a2e;
+      --text-secondary: #6c757d;
+      --gradient-1: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      --gradient-2: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-accent: linear-gradient(135deg, #e94560 0%, #f97316 100%);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background: #f0f2f5;
+      color: var(--text-primary);
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    /* Hero Navbar */
+    .navbar-custom {
+      background: var(--gradient-1);
+      padding: 0.8rem 0;
+      box-shadow: var(--shadow-md);
+      border-bottom: 2px solid var(--highlight);
+    }
+    .navbar-custom .navbar-brand {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #fff !important;
+      letter-spacing: 0.5px;
+    }
+    .navbar-custom .navbar-brand .brand-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--gradient-accent);
+      border-radius: 8px;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    .navbar-custom .nav-link {
+      color: rgba(255,255,255,0.8) !important;
+      font-weight: 500;
+      padding: 0.5rem 1rem !important;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      margin: 0 2px;
+    }
+    .navbar-custom .nav-link:hover,
+    .navbar-custom .nav-link.active {
+      color: #fff !important;
+      background: rgba(255,255,255,0.15);
+    }
+    .navbar-custom .nav-link.active {
+      background: var(--highlight);
+    }
+
+    /* Badge */
+    .demo-badge {
+      background: var(--gradient-accent);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-left: 10px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Page Header */
+    .page-header {
+      background: var(--gradient-1);
+      padding: 2rem 0 3rem;
+      margin-bottom: -2rem;
+      position: relative;
+    }
+    .page-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: #f0f2f5;
+      border-radius: 40px 40px 0 0;
+    }
+    .page-header h2 {
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.6rem;
+      margin: 0;
+    }
+    .page-header p {
+      color: rgba(255,255,255,0.7);
+      margin: 5px 0 0;
+      font-size: 0.9rem;
+    }
+
+    /* Cards */
+    .card-custom {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: none;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .card-custom:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .card-header-custom {
+      background: var(--gradient-1);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+      font-size: 1.05rem;
+      border: none;
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .data-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      padding: 12px 16px;
+      text-align: left;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e9ecef;
+      width: 35%;
+    }
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f2f5;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    .data-table tr:last-child td,
+    .data-table tr:last-child th {
+      border-bottom: none;
+    }
+
+    /* Gas Value Display */
+    .gas-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-family: 'Inter', monospace;
+    }
+    .gas-value.normal { color: #10b981; }
+    .gas-value.warning { color: var(--highlight); }
+    .gas-unit {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-left: 4px;
+      font-weight: 400;
+    }
+
+    /* Status Indicator */
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: blink 1.5s infinite;
+    }
+    .status-dot.online { background: #10b981; }
+    .status-dot.offline { background: #ef4444; }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Stat Cards */
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+    }
+    .stat-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .stat-card .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .stat-card .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .stat-card .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* Selector */
+    .machine-select {
+      background: #fff;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .machine-select:focus {
+      border-color: var(--highlight);
+      box-shadow: 0 0 0 3px rgba(233,69,96,0.15);
+      outline: none;
+    }
+
+    /* Control Form */
+    .control-form {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .control-form .form-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+    .control-form input[type="number"] {
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .control-form input[type="number"]:focus {
+      border-color: var(--highlight);
+      box-shadow: 0 0 0 3px rgba(233,69,96,0.15);
+    }
+
+    /* Buttons */
+    .btn-primary-custom {
+      background: var(--gradient-accent);
+      border: none;
+      color: #fff;
+      padding: 10px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(233,69,96,0.3);
+    }
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233,69,96,0.4);
+      color: #fff;
+    }
+    .btn-outline-custom {
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      padding: 8px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      background: transparent;
+      transition: all 0.3s ease;
+    }
+    .btn-outline-custom:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-outline-custom.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      min-height: 450px;
+    }
+    #chart-area {
+      width: 100%;
+      height: 400px;
+    }
+
+    /* History Table */
+    .history-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .history-table thead th {
+      background: var(--gradient-1);
+      color: #fff;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-align: center;
+      border: none;
+    }
+    .history-table tbody td {
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 0.88rem;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .history-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+    .history-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 2px solid #e9ecef;
+      background: #fff;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Footer */
+    .footer {
+      background: var(--gradient-1);
+      color: rgba(255,255,255,0.7);
+      padding: 1.5rem 0;
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 3rem;
+    }
+
+    /* Page sections */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* Ratio display */
+    .ratio-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ratio-bar {
+      flex: 1;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+    }
+    .ratio-bar .nit-part {
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      transition: width 0.5s ease;
+    }
+    .ratio-bar .hyd-part {
+      background: linear-gradient(90deg, #f97316, #fb923c);
+      transition: width 0.5s ease;
+    }
+
+    /* Toast notification */
+    .toast-custom {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--gradient-1);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      box-shadow: var(--shadow-lg);
+      z-index: 9999;
+      animation: slideIn 0.3s ease;
+      display: none;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .stat-card .stat-value { font-size: 1.2rem; }
+      .page-header h2 { font-size: 1.3rem; }
+      .tab-btn { padding: 6px 12px; font-size: 0.8rem; }
+    }
+
+    /* Update time animation */
+    .update-time {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <span class="brand-icon">🏭</span>
+        粉末冶金燒結監控系統
+        <span class="demo-badge">LIVE DEMO</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" style="border-color: rgba(255,255,255,0.3);">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="#" onclick="showPage('realtime')">機台即時資料</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('control')">控制介面</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('history')">歷史氣體濃度曲線圖</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('table')">機台歷史資料查詢</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ PAGE 1: Realtime Data ============ -->
+  <div id="page-realtime" class="page-section active">
+    <div class="page-header">
+      <div class="container">
+        <h2>📊 機台即時資料</h2>
+        <p>即時監控燒結製程關鍵氣體參數</p>
+      </div>
+    </div>
+    <div class="container" style="position: relative; z-index: 1;">
+      <!-- Machine Selector -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+          <span style="font-weight:600;">機台選擇：</span>
+          <select class="machine-select" id="machineSelect" onchange="switchMachine()">
+            <option value="1001">1號機台</option>
+            <option value="1002">2號機台</option>
+          </select>
+        </div>
+        <div class="update-time">
+          <span class="status-dot online"></span>
+          <span>即時更新中 · 上次更新：<span id="lastUpdate"></span></span>
+        </div>
+      </div>
+
+      <!-- Stat Cards Row -->
+      <div class="row g-3 mb-4" id="statCards">
+        <!-- Generated by JS -->
+      </div>
+
+      <!-- Main Data Table -->
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="card-custom">
+            <div class="card-header-custom">
+              <span id="machineTitle">1</span>號機台粉末冶金燒結氣體資料
+            </div>
+            <div class="p-3">
+              <table class="data-table" id="dataTable">
+                <!-- Generated by JS -->
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+          <!-- Ratio Card -->
+          <div class="card-custom mb-3">
+            <div class="card-header-custom">氮氣：氫氣 比例</div>
+            <div class="p-3">
+              <div class="mb-3">
+                <small class="text-muted fw-bold">前端（實際）</small>
+                <div class="ratio-display mt-1">
+                  <div class="ratio-bar">
+                    <div class="nit-part" id="nitBar" style="width:75%"></div>
+                    <div class="hyd-part" id="hydBar" style="width:25%"></div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                  <small style="color:#3b82f6;font-weight:600;">N₂ <span id="nitRatio">75</span>%</small>
+                  <small style="color:#f97316;font-weight:600;">H₂ <span id="hydRatio">25</span>%</small>
+                </div>
+              </div>
+              <hr>
+              <div>
+                <small class="text-muted fw-bold">後端（標準）</small>
+                <div class="ratio-display mt-1">
+                  <div class="ratio-bar">
+                    <div class="nit-part" style="width:90%"></div>
+                    <div class="hyd-part" style="width:10%"></div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                  <small style="color:#3b82f6;font-weight:600;">N₂ 90%</small>
+                  <small style="color:#f97316;font-weight:600;">H₂ 10%</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Safety Status -->
+          <div class="card-custom">
+            <div class="card-header-custom">⚠️ 安全狀態</div>
+            <div class="p-3" id="safetyStatus">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PAGE 2: Control ============ -->
+  <div id="page-control" class="page-section">
+    <div class="page-header">
+      <div class="container">
+        <h2>⚙️ 控制介面</h2>
+        <p>設定各項氣體濃度安全範圍</p>
+      </div>
+    </div>
+    <div class="container" style="position: relative; z-index: 1;">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="control-form">
+            <div class="text-center mb-4">
+              <h4 style="font-weight:700;">控制介面</h4>
+              <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+                <span style="font-weight:600;">機台選擇：</span>
+                <select class="machine-select" id="controlMachine">
+                  <option value="1001">1號機台</option>
+                  <option value="1002">2號機台</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3" id="controlFields">
+              <!-- Generated by JS -->
+            </div>
+
+            <div class="text-center mt-4">
+              <button class="btn btn-primary-custom" onclick="saveControl()">送出設定</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PAGE 3: History Chart ============ -->
+  <div id="page-history" class="page-section">
+    <div class="page-header">
+      <div class="container">
+        <h2>📈 歷史氣體濃度曲線圖</h2>
+        <p>分析歷史趨勢數據</p>
+      </div>
+    </div>
+    <div class="container" style="position: relative; z-index: 1;">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <span style="font-weight:600;">機台選擇：</span>
+          <select class="machine-select" id="chartMachine" onchange="renderChart()">
+            <option value="1001">1號機台</option>
+            <option value="1002">2號機台</option>
+          </select>
+        </div>
+      </div>
+      <div class="tab-nav" id="chartTabs">
+        <button class="tab-btn active" onclick="selectChart('hyd')">氫氣</button>
+        <button class="tab-btn" onclick="selectChart('nit')">氮氣</button>
+        <button class="tab-btn" onclick="selectChart('HN')">氮氣&氫氣</button>
+        <button class="tab-btn" onclick="selectChart('dew')">露點濕度</button>
+        <button class="tab-btn" onclick="selectChart('co2')">二氧化碳</button>
+        <button class="tab-btn" onclick="selectChart('hum')">濕度</button>
+        <button class="tab-btn" onclick="selectChart('tem')">溫度</button>
+      </div>
+      <div class="chart-container">
+        <div id="chart-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PAGE 4: History Table ============ -->
+  <div id="page-table" class="page-section">
+    <div class="page-header">
+      <div class="container">
+        <h2>📋 機台歷史資料查詢</h2>
+        <p>按日期區間查詢歷史數據</p>
+      </div>
+    </div>
+    <div class="container" style="position: relative; z-index: 1;">
+      <div class="card-custom mb-4">
+        <div class="p-3">
+          <div class="d-flex flex-wrap gap-3 align-items-end">
+            <div>
+              <label class="form-label fw-bold" style="font-size:0.85rem;">選擇機台</label>
+              <select class="machine-select" id="tableMachine">
+                <option value="1001">1號機台</option>
+                <option value="1002">2號機台</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label fw-bold" style="font-size:0.85rem;">開始日期</label>
+              <input type="date" class="form-control" id="startDate" value="2024-01-01" style="border-radius:8px;">
+            </div>
+            <div>
+              <label class="form-label fw-bold" style="font-size:0.85rem;">結束日期</label>
+              <input type="date" class="form-control" id="endDate" value="2024-12-31" style="border-radius:8px;">
+            </div>
+            <div>
+              <button class="btn btn-primary-custom" onclick="queryHistory()">查詢</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="historyTableArea">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="container">
+      <p class="mb-0">粉末冶金燒結製程 IoT 監控系統 — 畢業專題作品 · Live Demo（模擬數據）</p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-custom" id="toast"></div>
+
+  <script>
+    // ========== MOCK DATA ==========
+    const gasNames = {
+      hyd: { name: '氫氣濃度', unit: '%', icon: '🔵', color: '#3b82f6', bgColor: 'rgba(59,130,246,0.1)', borderColor: '#3b82f6' },
+      nit: { name: '氮氣濃度', unit: '%', icon: '🟣', color: '#8b5cf6', bgColor: 'rgba(139,92,246,0.1)', borderColor: '#8b5cf6' },
+      dew: { name: '露點濕度', unit: '%', icon: '💧', color: '#06b6d4', bgColor: 'rgba(6,182,212,0.1)', borderColor: '#06b6d4' },
+      co2: { name: 'CO₂濃度', unit: '%', icon: '🟢', color: '#10b981', bgColor: 'rgba(16,185,129,0.1)', borderColor: '#10b981' },
+      hum: { name: '濕度', unit: '%', icon: '🌡', color: '#f59e0b', bgColor: 'rgba(245,158,11,0.1)', borderColor: '#f59e0b' },
+      tem: { name: '溫度', unit: '°C', icon: '🔴', color: '#ef4444', bgColor: 'rgba(239,68,68,0.1)', borderColor: '#ef4444' }
+    };
+
+    const ranges = {
+      hyd: [10, 30], nit: [60, 90], dew: [20, 60],
+      co2: [0, 5], hum: [30, 70], tem: [800, 1100]
+    };
+
+    // Generate mock history data
+    function generateMockData(machine) {
+      const data = [];
+      const base = machine === '1001' ? 
+        { hyd: 25, nit: 75, dew: 35, co2: 2, hum: 45, tem: 950 } :
+        { hyd: 20, nit: 80, dew: 40, co2: 3, hum: 50, tem: 1000 };
+      
+      for (let i = 30; i >= 0; i--) {
+        const dt = new Date();
+        dt.setMinutes(dt.getMinutes() - i * 10);
+        data.push({
+          uploadDT: dt.toISOString().replace('T', ' ').substring(0, 19),
+          machine_num: machine,
+          hyd: Math.max(0, Math.min(100, base.hyd + (Math.random() - 0.5) * 10)).toFixed(0),
+          nit: Math.max(0, Math.min(100, base.nit + (Math.random() - 0.5) * 10)).toFixed(0),
+          dew: Math.max(0, Math.min(100, base.dew + (Math.random() - 0.5) * 15)).toFixed(0),
+          co2: Math.max(0, Math.min(100, base.co2 + (Math.random() - 0.5) * 4)).toFixed(0),
+          hum: Math.max(0, Math.min(100, base.hum + (Math.random() - 0.5) * 10)).toFixed(1),
+          tem: Math.max(0, Math.min(1150, base.tem + (Math.random() - 0.5) * 100)).toFixed(1)
+        });
+      }
+      return data;
+    }
+
+    let mockData1001 = generateMockData('1001');
+    let mockData1002 = generateMockData('1002');
+    let currentChart = 'hyd';
+
+    function getCurrentData() {
+      const machine = document.getElementById('machineSelect').value;
+      const data = machine === '1001' ? mockData1001 : mockData1002;
+      return data[data.length - 1];
+    }
+
+    // ========== PAGE NAVIGATION ==========
+    function showPage(page) {
+      document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      document.querySelectorAll('.navbar-nav .nav-link').forEach(l => l.classList.remove('active'));
+      event.target.classList.add('active');
+      if (page === 'history') setTimeout(() => renderChart(), 100);
+      if (page === 'table') queryHistory();
+    }
+
+    // ========== REALTIME PAGE ==========
+    function updateRealtime() {
+      const d = getCurrentData();
+      const machine = document.getElementById('machineSelect').value;
+      const machineNum = machine === '1001' ? '1' : '2';
+      document.getElementById('machineTitle').textContent = machineNum;
+      document.getElementById('lastUpdate').textContent = d.uploadDT;
+
+      // Stat cards
+      let cardsHtml = '';
+      for (const [key, info] of Object.entries(gasNames)) {
+        const val = parseFloat(d[key]);
+        const inRange = val >= ranges[key][0] && val <= ranges[key][1];
+        cardsHtml += `
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card" style="border-left-color:${info.borderColor}">
+              <div class="stat-icon" style="background:${info.bgColor}">${info.icon}</div>
+              <div class="stat-label">${info.name}</div>
+              <div class="stat-value" style="color:${inRange ? info.color : '#ef4444'}">${d[key]}<small class="gas-unit">${info.unit}</small></div>
+            </div>
+          </div>`;
+      }
+      document.getElementById('statCards').innerHTML = cardsHtml;
+
+      // Data table
+      let tableHtml = `
+        <tr><th>流水號</th><td>${d.machine_num}</td></tr>
+        <tr><th>日期時間</th><td>${d.uploadDT}</td></tr>`;
+      for (const [key, info] of Object.entries(gasNames)) {
+        const val = parseFloat(d[key]);
+        const inRange = val >= ranges[key][0] && val <= ranges[key][1];
+        tableHtml += `<tr><th>${info.name}(${info.unit})</th><td><span class="gas-value ${inRange ? 'normal' : 'warning'}">${d[key]}</span><span class="gas-unit">${info.unit}</span></td></tr>`;
+      }
+      document.getElementById('dataTable').innerHTML = tableHtml;
+
+      // Ratio
+      const nit = parseFloat(d.nit), hyd = parseFloat(d.hyd);
+      const total = nit + hyd;
+      const nitPct = (nit / total * 100).toFixed(0);
+      const hydPct = (hyd / total * 100).toFixed(0);
+      document.getElementById('nitBar').style.width = nitPct + '%';
+      document.getElementById('hydBar').style.width = hydPct + '%';
+      document.getElementById('nitRatio').textContent = nitPct;
+      document.getElementById('hydRatio').textContent = hydPct;
+
+      // Safety status
+      let safetyHtml = '';
+      for (const [key, info] of Object.entries(gasNames)) {
+        const val = parseFloat(d[key]);
+        const inRange = val >= ranges[key][0] && val <= ranges[key][1];
+        safetyHtml += `<div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span style="font-size:0.88rem;">${info.icon} ${info.name}</span>
+          <span class="badge ${inRange ? 'bg-success' : 'bg-danger'}" style="font-size:0.75rem;">${inRange ? '正常' : '異常'}</span>
+        </div>`;
+      }
+      document.getElementById('safetyStatus').innerHTML = safetyHtml;
+    }
+
+    function switchMachine() {
+      updateRealtime();
+      showToast('已切換至 ' + (document.getElementById('machineSelect').value === '1001' ? '1號' : '2號') + '機台');
+    }
+
+    // ========== CONTROL PAGE ==========
+    function renderControl() {
+      const fields = [
+        { key: 'hyd', label: '氫氣濃度區間' },
+        { key: 'nit', label: '氮氣濃度區間' },
+        { key: 'dew', label: '露點濕度區間' },
+        { key: 'co2', label: '二氧化碳區間' },
+        { key: 'hum', label: '濕度區間' },
+        { key: 'tem', label: '溫度區間' },
+      ];
+      let html = '';
+      fields.forEach(f => {
+        html += `<div class="col-12">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <label class="form-label mb-0" style="min-width:140px;">${gasNames[f.key].icon} ${f.label}：</label>
+            <input type="number" class="form-control" style="max-width:120px;" value="${ranges[f.key][0]}" id="ctrl_${f.key}_low" min="0" max="${f.key==='tem'?1150:100}">
+            <span style="font-weight:700;">~</span>
+            <input type="number" class="form-control" style="max-width:120px;" value="${ranges[f.key][1]}" id="ctrl_${f.key}_high" min="0" max="${f.key==='tem'?1150:100}">
+          </div>
+        </div>`;
+      });
+      document.getElementById('controlFields').innerHTML = html;
+    }
+
+    function saveControl() {
+      const keys = ['hyd','nit','dew','co2','hum','tem'];
+      for (const k of keys) {
+        const low = parseInt(document.getElementById(`ctrl_${k}_low`).value);
+        const high = parseInt(document.getElementById(`ctrl_${k}_high`).value);
+        if (low > high) { alert('請由小到大輸入'); return; }
+        ranges[k] = [low, high];
+      }
+      showToast('✅ 設定已儲存！');
+      updateRealtime();
+    }
+
+    // ========== CHART PAGE ==========
+    function selectChart(type) {
+      currentChart = type;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      renderChart();
+    }
+
+    function renderChart() {
+      const machine = document.getElementById('chartMachine').value;
+      const data = machine === '1001' ? mockData1001 : mockData1002;
+      const last10 = data.slice(-10);
+
+      document.getElementById('chart-area').innerHTML = '';
+
+      const info = gasNames[currentChart] || { name: '氮氣&氫氣', unit: '%' };
+
+      if (currentChart === 'HN') {
+        // Stacked bar chart
+        const chartData = last10.map(d => [d.uploadDT.substring(11, 16), parseInt(d.hyd), parseInt(d.nit)]);
+        var chart = anychart.column();
+        var dataSet = anychart.data.set(chartData);
+        var s1 = dataSet.mapAs({x: 0, value: 1});
+        var s2 = dataSet.mapAs({x: 0, value: 2});
+        var series1 = chart.column(s1); series1.name('氫氣');
+        var series2 = chart.column(s2); series2.name('氮氣');
+        series1.normal().stroke('#FFD494', 2).fill('#FFD494');
+        series2.normal().stroke('#FEA38A', 2).fill('#FEA38A');
+        chart.legend().enabled(true);
+        chart.yScale().stackMode('percent');
+        chart.yAxis().labels().format('{%Value}%');
+        chart.title().enabled(true).useHtml(true).text(
+          `<span style="color: #1a1a2e; font-weight: bold; font-size:18px;">${machine} 氫氣：氮氣歷史堆疊長條圖</span>`
+        );
+        chart.yGrid(true);
+        chart.yAxis().title('氫氣：氮氣');
+        chart.xAxis().title('時間');
+      } else {
+        const chartData = last10.map(d => [d.uploadDT.substring(11, 16), parseFloat(d[currentChart])]);
+        var dataSet = anychart.data.set(chartData);
+        var s1 = dataSet.mapAs({x: 0, value: 1});
+        var chart = anychart.line();
+        var series = chart.line(s1);
+        series.name(info.name + '(' + info.unit + ')');
+        series.markers().enabled(true).type('circle').size(4);
+        series.normal().stroke(info.color || '#E07A5F', 2.5);
+        chart.crosshair().enabled(true).yStroke(null).yLabel(false);
+        chart.tooltip().positionMode('point').position('right').anchor('left-center').offsetX(5).offsetY(5);
+        chart.title().enabled(true).useHtml(true).text(
+          `<span style="color: #1a1a2e; font-weight: bold; font-size:18px;">${machine} ${info.name}歷史曲線圖</span>`
+        );
+        chart.yGrid(true);
+        chart.yAxis().title(info.name + '(' + info.unit + ')');
+        chart.xAxis().title('時間');
+      }
+
+      chart.container('chart-area');
+      chart.draw();
+    }
+
+    // ========== HISTORY TABLE ==========
+    function queryHistory() {
+      const machine = document.getElementById('tableMachine').value;
+      const data = machine === '1001' ? mockData1001 : mockData1002;
+      
+      let html = `<h5 style="font-weight:700;margin-bottom:1rem;">查詢結果：</h5>
+        <table class="history-table">
+        <thead><tr>
+          <th>流水號</th><th>日期時間</th><th>氫氣(%)</th><th>氮氣(%)</th>
+          <th>露點(%)</th><th>CO₂(%)</th><th>濕度(%)</th><th>溫度(°C)</th>
+        </tr></thead><tbody>`;
+      data.forEach(d => {
+        html += `<tr>
+          <td>${d.machine_num}</td><td>${d.uploadDT}</td>
+          <td>${d.hyd}</td><td>${d.nit}</td><td>${d.dew}</td>
+          <td>${d.co2}</td><td>${d.hum}</td><td>${d.tem}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('historyTableArea').innerHTML = html;
+    }
+
+    // ========== TOAST ==========
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2500);
+    }
+
+    // ========== AUTO UPDATE ==========
+    function autoUpdate() {
+      // Simulate data updates
+      const addNew = (arr, machine) => {
+        const prev = arr[arr.length - 1];
+        const dt = new Date();
+        const newEntry = {
+          uploadDT: dt.toISOString().replace('T', ' ').substring(0, 19),
+          machine_num: machine,
+          hyd: Math.max(0, Math.min(100, parseFloat(prev.hyd) + (Math.random() - 0.5) * 4)).toFixed(0),
+          nit: Math.max(0, Math.min(100, parseFloat(prev.nit) + (Math.random() - 0.5) * 4)).toFixed(0),
+          dew: Math.max(0, Math.min(100, parseFloat(prev.dew) + (Math.random() - 0.5) * 6)).toFixed(0),
+          co2: Math.max(0, Math.min(100, parseFloat(prev.co2) + (Math.random() - 0.5) * 2)).toFixed(0),
+          hum: Math.max(0, Math.min(100, parseFloat(prev.hum) + (Math.random() - 0.5) * 4)).toFixed(1),
+          tem: Math.max(0, Math.min(1150, parseFloat(prev.tem) + (Math.random() - 0.5) * 30)).toFixed(1)
+        };
+        arr.push(newEntry);
+        if (arr.length > 50) arr.shift();
+      };
+      addNew(mockData1001, '1001');
+      addNew(mockData1002, '1002');
+      updateRealtime();
+    }
+
+    // ========== INIT ==========
+    updateRealtime();
+    renderControl();
+    setInterval(autoUpdate, 5000);
+  </script>
+</body>
+</html>
