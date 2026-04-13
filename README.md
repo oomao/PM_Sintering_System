@@ -166,6 +166,12 @@ php -S localhost:8080 -t web/
 3. 選擇正確的開發板與連接埠
 4. 上傳韌體
 
+## 🌐 Live Demo
+
+👉 [**點擊觀看 Live Demo**](https://oomao.github.io/PM_Sintering_System/)
+
+> 注意：此 Live Demo 為靜態展示版本，內網環境及感測器會以**模擬數據**循環呈現。您初次點擊若出現 404，是由於 GitHub Pages 需要幾分鐘的時間進行部署，請稍候片刻再重新整理。
+
 ---
 
 ## 📄 研討會發表
